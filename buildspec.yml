@@ -25,13 +25,13 @@ phases:
         if [[ "$CODEBUILD_INITIATOR" =~ ^codepipeline* ]]; then
           echo Logging in to Amazon ECR...
           aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_NUMBER.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-          echo START -- Build and Publish Docker Image: amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64
+          echo "START -- Build and Publish Docker Image: amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64"
           docker build -t amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest ./amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64
           docker tag amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest
           docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest
-          echo END -- Build and Publish Docker Image: amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64
+          echo "END -- Build and Publish Docker Image: amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64"
         else 
-          echo "Not running in CodePipeline, skipping build and publish
+          echo "Not running in CodePipeline, skipping build and publish"
         fi
 
   post_build:
@@ -43,8 +43,3 @@ reports:
       - "junit.xml"
     base-directory: "build"
     discard-paths: no
-
-artifacts:
-  files:
-    - build/**/*
-    - template.yml
