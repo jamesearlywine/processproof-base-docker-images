@@ -1,0 +1,50 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - export PATH=./node_modules/.bin:$PATH
+  pre_build:
+    commands:
+      - echo Installing source NPM dependencies...
+      - npm install
+  build:
+    commands:
+      - echo Build started on `date`
+      - npm run build
+      - npm run test
+
+  post_build:
+    commands:
+      - |
+        if [[ "$CODEBUILD_INITIATOR" =~ ^codepipeline* ]]; then
+          export CREDS=$(curl 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI)
+          export AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r .AccessKeyId)
+          export AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r .SecretAccessKey)
+          export AWS_SESSION_TOKEN=$(echo $CREDS | jq -r .Token)
+          export AWS_DEFAULT_REGION=us-east-2
+          export AWS_ACCOUNT_NUMBER=$(aws sts get-caller-identity --query Account --output text)
+          echo Logging in to Amazon ECR...
+          aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_NUMBER.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+          echo START -- Build and Publish Docker Image: amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64
+          docker build -t amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest ./amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64
+          docker tag amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest
+          docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest
+          echo END -- Build and Publish Docker Image: amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64
+        else 
+          echo "Not running in CodePipeline, skipping Docker image build and publish
+        fi
+
+reports:
+  arn:aws:codebuild:us-east-2:546515125053:report-group/codebuild-processproof-base-docker-images-for-lambdas:
+    files:
+      - "junit.xml"
+    base-directory: "build"
+    discard-paths: no
+
+artifacts:
+  files:
+    - build/**/*
+    - template.yml
