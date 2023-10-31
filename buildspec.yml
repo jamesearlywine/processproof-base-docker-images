@@ -28,6 +28,7 @@ phases:
           echo "START -- Build and Publish Docker Image: amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64"
           docker build -t amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest ./amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64
           docker tag amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest $AWS_ACCOUNT_NUMBER.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest
+          aws ecr describe-repositories --repository-names amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64 || aws ecr create-repository --repository-name amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64
           docker push $AWS_ACCOUNT_NUMBER.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64:latest
           echo "END -- Build and Publish Docker Image: amazon-linux-v2-node-v18-libre-office-v7-6-2-x86-64"
         else 
@@ -36,10 +37,3 @@ phases:
 
   post_build:
     commands:
-
-reports:
-  arn:aws:codebuild:us-east-2:546515125053:report-group/codebuild-processproof-base-docker-images-for-lambdas:
-    files:
-      - "junit.xml"
-    base-directory: "build"
-    discard-paths: no
